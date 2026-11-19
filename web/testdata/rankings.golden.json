@@ -1,0 +1,768 @@
+{
+  "cyclic.json": {
+    "looseEnds": [
+      {
+        "id": "a",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "b",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "cycle"
+      },
+      {
+        "id": "b",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "a",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "cycle"
+      },
+      {
+        "id": "c",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "a",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      }
+    ],
+    "parked": []
+  },
+  "easyloom-bite7.json": {
+    "looseEnds": [
+      {
+        "id": "queue-mutations",
+        "releases": [
+          "mutation-refresh",
+          "queue-reorder-ui"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "snapshot-refresh",
+        "releases": [
+          "live-updates",
+          "snapshot-model"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "ci-workflow",
+        "releases": [
+          "foundation"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "unblock-simulation",
+        "releases": [
+          "unblock-ranking-view"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "live-updates",
+        "releases": [
+          "web-shell"
+        ],
+        "blockedBy": [
+          {
+            "id": "snapshot-refresh",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      },
+      {
+        "id": "loom-commands",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "foundation",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "ci-workflow"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "loom-upstream",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "upstream-batch-queue-set",
+          "upstream-cheap-revision",
+          "upstream-map-scope",
+          "upstream-migrate-dry-run-json",
+          "upstream-queue-inversion"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "mutation-refresh",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "queue-mutations",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      },
+      {
+        "id": "queue-control",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "mutation-refresh",
+          "queue-mutations",
+          "queue-reorder-ui"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "queue-reorder-ui",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "queue-mutations",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      },
+      {
+        "id": "snapshot-model",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "snapshot-refresh"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "unblock-impact",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "unblock-ranking-view",
+          "unblock-simulation"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "unblock-ranking-view",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "unblock-simulation",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      },
+      {
+        "id": "web-shell",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "live-updates"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      }
+    ],
+    "parked": [
+      {
+        "id": "feature-backlog",
+        "releases": [
+          "backlog-agent-trigger",
+          "backlog-lifecycle-mutations",
+          "backlog-multi-loom",
+          "backlog-static-export",
+          "backlog-timeline",
+          "backlog-v1-migration-preview"
+        ],
+        "blockedBy": [],
+        "openChildren": [
+          "backlog-agent-trigger",
+          "backlog-lifecycle-mutations",
+          "backlog-multi-loom",
+          "backlog-static-export",
+          "backlog-timeline",
+          "backlog-v1-migration-preview"
+        ],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "backlog-agent-trigger",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-lifecycle-mutations",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-multi-loom",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-static-export",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-timeline",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-v1-migration-preview",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "upstream-batch-queue-set",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-cheap-revision",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-map-scope",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-migrate-dry-run-json",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-queue-inversion",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      }
+    ]
+  },
+  "easyloom.json": {
+    "looseEnds": [
+      {
+        "id": "queue-mutations",
+        "releases": [
+          "mutation-refresh",
+          "queue-reorder-ui"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "ci-workflow",
+        "releases": [
+          "foundation"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "loom-commands",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "foundation",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "ci-workflow"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "loom-upstream",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "upstream-batch-queue-set",
+          "upstream-cheap-revision",
+          "upstream-map-scope",
+          "upstream-migrate-dry-run-json",
+          "upstream-queue-inversion"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "mutation-refresh",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "queue-mutations",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      },
+      {
+        "id": "queue-control",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "mutation-refresh",
+          "queue-mutations",
+          "queue-reorder-ui"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "queue-reorder-ui",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "queue-mutations",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      }
+    ],
+    "parked": [
+      {
+        "id": "feature-backlog",
+        "releases": [
+          "backlog-agent-trigger",
+          "backlog-lifecycle-mutations",
+          "backlog-multi-loom",
+          "backlog-static-export",
+          "backlog-timeline",
+          "backlog-v1-migration-preview"
+        ],
+        "blockedBy": [],
+        "openChildren": [
+          "backlog-agent-trigger",
+          "backlog-lifecycle-mutations",
+          "backlog-multi-loom",
+          "backlog-static-export",
+          "backlog-timeline",
+          "backlog-v1-migration-preview"
+        ],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "backlog-agent-trigger",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-lifecycle-mutations",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-multi-loom",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-static-export",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-timeline",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "backlog-v1-migration-preview",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "feature-backlog",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "upstream-batch-queue-set",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-cheap-revision",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-map-scope",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-migrate-dry-run-json",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "upstream-queue-inversion",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      }
+    ]
+  },
+  "synthetic.json": {
+    "looseEnds": [
+      {
+        "id": "in-hand-one",
+        "releases": [
+          "blocked-one"
+        ],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "in-hand"
+      },
+      {
+        "id": "plain-goal",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": true,
+        "action": "tie"
+      },
+      {
+        "id": "active-goal",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [
+          "in-hand-one",
+          "blocked-one",
+          "broken-one"
+        ],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "decompose"
+      },
+      {
+        "id": "blocked-one",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "in-hand-one",
+            "status": "blocked",
+            "reason": null
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      },
+      {
+        "id": "broken-one",
+        "releases": [],
+        "blockedBy": [
+          {
+            "id": "never-existed",
+            "status": "broken",
+            "reason": "missing"
+          }
+        ],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": false,
+        "ready": false,
+        "action": "unblock"
+      }
+    ],
+    "parked": [
+      {
+        "id": "parked-goal",
+        "releases": [
+          "once-parked"
+        ],
+        "blockedBy": [],
+        "openChildren": [
+          "twice-parked",
+          "once-parked"
+        ],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "once-parked",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "parked-goal",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      },
+      {
+        "id": "solo-parked",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": null,
+        "parked": true,
+        "ready": false,
+        "action": "resume"
+      },
+      {
+        "id": "twice-parked",
+        "releases": [],
+        "blockedBy": [],
+        "openChildren": [],
+        "resumeVia": "parked-goal",
+        "parked": true,
+        "ready": false,
+        "action": "promote"
+      }
+    ]
+  }
+}

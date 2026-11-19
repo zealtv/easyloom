@@ -1,0 +1,8 @@
+.DS_Store
+bin/
+dist/
+*.test
+*.out
+node_modules/
+.env
+scratch/

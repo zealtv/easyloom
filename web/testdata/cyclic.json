@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "format_version": 2,
+  "loom_root": "/tmp/cyclic/.loom",
+  "stitches": [
+    {
+      "id": "a",
+      "root_id": "a",
+      "parent_id": null,
+      "path": "threads/a",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [
+        {
+          "from": "a",
+          "to": "b",
+          "status": "blocked",
+          "reason": null
+        }
+      ],
+      "cycle": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "id": "b",
+      "root_id": "b",
+      "parent_id": null,
+      "path": "threads/b",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [
+        {
+          "from": "b",
+          "to": "a",
+          "status": "blocked",
+          "reason": null
+        }
+      ],
+      "cycle": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "id": "c",
+      "root_id": "c",
+      "parent_id": null,
+      "path": "threads/c",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [
+        {
+          "from": "c",
+          "to": "a",
+          "status": "blocked",
+          "reason": null
+        }
+      ],
+      "cycle": []
+    }
+  ],
+  "decomposition_edges": [],
+  "dependency_edges": [
+    {
+      "from": "a",
+      "to": "b",
+      "status": "blocked",
+      "reason": null
+    },
+    {
+      "from": "b",
+      "to": "a",
+      "status": "blocked",
+      "reason": null
+    },
+    {
+      "from": "c",
+      "to": "a",
+      "status": "blocked",
+      "reason": null
+    }
+  ],
+  "cycles": [
+    [
+      "a",
+      "b"
+    ]
+  ],
+  "frontier": [],
+  "recently_completed": [],
+  "diagnostics": []
+}

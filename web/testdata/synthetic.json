@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "format_version": 2,
+  "loom_root": "/tmp/synthetic/.loom",
+  "stitches": [
+    {
+      "id": "parked-goal",
+      "root_id": "parked-goal",
+      "parent_id": null,
+      "path": "threads/parked-goal.waiting",
+      "tray": "threads",
+      "state": "waiting",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [
+        "twice-parked",
+        "once-parked"
+      ],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "twice-parked",
+      "root_id": "parked-goal",
+      "parent_id": "parked-goal",
+      "path": "threads/parked-goal.waiting/twice-parked.waiting",
+      "tray": "threads",
+      "state": "waiting",
+      "ready": false,
+      "waiting_inherited": true,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "once-parked",
+      "root_id": "parked-goal",
+      "parent_id": "parked-goal",
+      "path": "threads/parked-goal.waiting/once-parked",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": true,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "active-goal",
+      "root_id": "active-goal",
+      "parent_id": null,
+      "path": "threads/active-goal",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [
+        "in-hand-one",
+        "blocked-one",
+        "broken-one",
+        "done-one"
+      ],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "in-hand-one",
+      "root_id": "active-goal",
+      "parent_id": "active-goal",
+      "path": "threads/active-goal/in-hand-one.stitching",
+      "tray": "threads",
+      "state": "stitching",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "blocked-one",
+      "root_id": "active-goal",
+      "parent_id": "active-goal",
+      "path": "threads/active-goal/blocked-one",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [
+        {
+          "from": "blocked-one",
+          "to": "in-hand-one",
+          "status": "blocked",
+          "reason": null
+        }
+      ],
+      "cycle": []
+    },
+    {
+      "id": "broken-one",
+      "root_id": "active-goal",
+      "parent_id": "active-goal",
+      "path": "threads/active-goal/broken-one",
+      "tray": "threads",
+      "state": "plain",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [
+        {
+          "from": "broken-one",
+          "to": "never-existed",
+          "status": "broken",
+          "reason": "missing"
+        }
+      ],
+      "cycle": []
+    },
+    {
+      "id": "done-one",
+      "root_id": "active-goal",
+      "parent_id": "active-goal",
+      "path": "threads/active-goal/done-one.tied",
+      "tray": "threads",
+      "state": "tied",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": "2026-08-04T10:00:00+10:00",
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "solo-parked",
+      "root_id": "solo-parked",
+      "parent_id": null,
+      "path": "threads/solo-parked.waiting",
+      "tray": "threads",
+      "state": "waiting",
+      "ready": false,
+      "waiting_inherited": false,
+      "queue_position": null,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [],
+      "cycle": []
+    },
+    {
+      "id": "plain-goal",
+      "root_id": "plain-goal",
+      "parent_id": null,
+      "path": "threads/plain-goal",
+      "tray": "threads",
+      "state": "plain",
+      "ready": true,
+      "waiting_inherited": false,
+      "queue_position": 1,
+      "completed_at": null,
+      "archived": false,
+      "legacy": false,
+      "children": [],
+      "dependencies": [],
+      "cycle": []
+    }
+  ],
+  "decomposition_edges": [
+    {
+      "parent": "parked-goal",
+      "child": "twice-parked"
+    },
+    {
+      "parent": "parked-goal",
+      "child": "once-parked"
+    },
+    {
+      "parent": "active-goal",
+      "child": "in-hand-one"
+    },
+    {
+      "parent": "active-goal",
+      "child": "blocked-one"
+    },
+    {
+      "parent": "active-goal",
+      "child": "broken-one"
+    },
+    {
+      "parent": "active-goal",
+      "child": "done-one"
+    }
+  ],
+  "dependency_edges": [
+    {
+      "from": "blocked-one",
+      "to": "in-hand-one",
+      "status": "blocked",
+      "reason": null
+    },
+    {
+      "from": "broken-one",
+      "to": "never-existed",
+      "status": "broken",
+      "reason": "missing"
+    }
+  ],
+  "cycles": [],
+  "frontier": [
+    "plain-goal"
+  ],
+  "recently_completed": [
+    "done-one"
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "dependency-missing",
+      "message": "broken-one needs never-existed, which does not exist",
+      "stitch_id": "broken-one",
+      "target_id": "never-existed"
+    }
+  ]
+}

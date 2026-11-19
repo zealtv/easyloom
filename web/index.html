@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>easyloom</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <span class="loom" id="loom-name">…</span>
+      <nav class="views" id="views"></nav>
+      <span class="age" id="snapshot-age"></span>
+      <button type="button" id="refresh">refresh</button>
+    </header>
+
+    <!-- A list above what the selected stitch entails, the shape the TUI has.
+         Both panes scroll on their own; the page itself does not. -->
+    <main class="panes" id="panes">
+      <section class="pane list" id="list" tabindex="0" aria-label="stitches">
+        <p class="muted">Loading…</p>
+      </section>
+      <div
+        class="split"
+        id="split"
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="resize the panes"
+        tabindex="0"
+      ></div>
+      <section class="pane detail" id="detail" aria-label="what the selected stitch entails"></section>
+    </main>
+
+    <footer class="bar bottom">
+      <span id="status">easyloom</span>
+      <!-- What a queue command did, or why the loom refused it. aria-live so a
+           reader who is not looking at the footer is still told. -->
+      <span id="notice" aria-live="polite"></span>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
