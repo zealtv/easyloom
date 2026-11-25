@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.0 (2026-11-25)
+
+EasyLoom is now the terminal UI alone.
+
+- The browser frontend is gone: `easyloom web` and its `--port`, `--no-open`
+  and `--dev` flags have been removed, along with the HTTP server and the
+  embedded web assets. Run `easyloom [path]` for the terminal UI as before.
+- Building and testing need only Go. Node is no longer used, not even for
+  tests.
+- Inside tmux, EasyLoom sets the pane option `@tw-focus` to the tabs and the
+  list, so a small live preview of the pane (such as tireless-watcher's) shows
+  the queue rather than the screen's edge.
+
 ## v0.1.0 (2026-11-19)
 
 The first public release: a terminal viewer and controller for a

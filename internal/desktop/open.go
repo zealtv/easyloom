@@ -1,9 +1,8 @@
-// Package desktop hands things to the user's desktop: a URL to the default
-// browser, a folder to the default file manager.
+// Package desktop hands things to the user's desktop: a path to the default
+// opener, a folder to the default file manager.
 package desktop
 
 import (
-	"fmt"
 	"os/exec"
 	"runtime"
 )
@@ -22,16 +21,4 @@ func Command(target string) *exec.Cmd {
 	default:
 		return exec.Command("xdg-open", target)
 	}
-}
-
-// Open starts the opener on target and does not wait for it.
-func Open(target string) error {
-	cmd := Command(target)
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("%s: %w", cmd.Path, err)
-	}
-	// What it opens outlives us; reap the opener so it does not become a
-	// zombie held by a program that is still running.
-	go func() { _ = cmd.Wait() }()
-	return nil
 }

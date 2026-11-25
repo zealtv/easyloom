@@ -11,13 +11,9 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime/debug"
-	"strings"
-	"time"
 
 	"github.com/charmbracelet/x/term"
 
-	"github.com/zealtv/easyloom/internal/server"
-	"github.com/zealtv/easyloom/internal/snapshot"
 	"github.com/zealtv/easyloom/internal/target"
 	"github.com/zealtv/easyloom/internal/tui"
 	"github.com/zealtv/easyloom/internal/warm"
@@ -42,15 +38,11 @@ func main() {
 type options struct {
 	path    string
 	scan    string
-	port    int
-	noOpen  bool
-	dev     bool
 	version bool
 }
 
 func run(ctx context.Context, args []string, stdout, stderr io.Writer, getenv func(string) string) error {
-	command, rest := splitCommand(args)
-	opts, err := parseFlags(command, rest, stderr)
+	opts, err := parseFlags(args, stderr)
 	if err != nil {
 		return err
 	}
@@ -74,7 +66,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, getenv fu
 		// already knows instead of an error. An explicit path or $LOOM_DIR
 		// that does not resolve is still an error — the user named a loom,
 		// and a picker would be answering a different question.
-		if !openable(opts, getenv, err) || command == commandWeb {
+		if !openable(opts, getenv, err) {
 			return err
 		}
 		return pickAndRun(ctx, set, stdout, getenv, err)
@@ -107,13 +99,6 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, getenv fu
 	}
 	if state.Snapshot == nil {
 		return state.Err
-	}
-
-	if command == commandWeb {
-		summarise(stdout, state)
-		return serveWeb(ctx, opts, stdout, server.Loom{
-			Target: loom, Version: probed, Cache: open.Cache, Mutator: open.Mutator,
-		})
 	}
 
 	interactive := isTerminal(stdout)
@@ -164,40 +149,8 @@ func pickAndRun(ctx context.Context, set *warm.Set, stdout io.Writer, getenv fun
 	})
 }
 
-// serveWeb runs the browser frontend until the user interrupts it. The
-// deferred cache close in the caller runs after this returns, which is what
-// kills a map subprocess still in flight at shutdown.
-//
-// The registry is seeded with the one loom this process resolved, and the loom
-// lives in the URL from there on: the server holds no notion of a current one.
-func serveWeb(ctx context.Context, opts options, stdout io.Writer, loom server.Loom) error {
-	registry := server.NewRegistry()
-	entry := registry.Add(loom)
-	fmt.Fprintf(stdout, "slug     %s\n", entry.Slug)
-
-	assets, err := server.Assets(opts.dev)
-	if err != nil {
-		return err
-	}
-	if opts.dev {
-		fmt.Fprintln(stdout, "assets   web/ on disk (--dev): reload the page to pick up a change")
-	}
-
-	srv, err := server.New(server.Options{
-		Port:    opts.port,
-		Path:    server.FrontierPath(entry.Slug),
-		Handler: server.NewRouter(server.RouterOptions{Registry: registry, Assets: assets}),
-		Output:  stdout,
-		NoOpen:  opts.noOpen,
-	})
-	if err != nil {
-		return err
-	}
-	return srv.Serve(ctx)
-}
-
 // scanLooms walks a tree for deployed looms and reports them. It prints and
-// exits rather than opening a frontend: --scan answers "what is on this
+// exits rather than opening the UI: --scan answers "what is on this
 // machine", which is a question, not a destination.
 //
 // The walk itself lives in internal/target and returns values, because the
@@ -242,20 +195,6 @@ func plural(n int, noun string) string {
 	return fmt.Sprintf("%d %ss", n, noun)
 }
 
-// commandWeb is the only subcommand. No subcommand starts the terminal
-// frontend, which is the thing a loom is usually looked at with.
-const commandWeb = "web"
-
-// splitCommand separates a subcommand from the flags and path. It is
-// deliberately not a flag: "easyloom web ." reads as a mode, and a mode that
-// changes the whole frontend should not look like an option.
-func splitCommand(args []string) (string, []string) {
-	if len(args) > 0 && args[0] == commandWeb {
-		return commandWeb, args[1:]
-	}
-	return "", args
-}
-
 // isTerminal reports whether w is a terminal this program can draw on. A
 // redirected stdout gets one plain frame instead of an interactive program
 // with no keyboard.
@@ -264,22 +203,14 @@ func isTerminal(w io.Writer) bool {
 	return ok && term.IsTerminal(f.Fd())
 }
 
-func parseFlags(command string, args []string, stderr io.Writer) (options, error) {
+func parseFlags(args []string, stderr io.Writer) (options, error) {
 	var opts options
-	name := "easyloom"
-	if command != "" {
-		name += " " + command
-	}
-	flags := flag.NewFlagSet(name, flag.ContinueOnError)
+	flags := flag.NewFlagSet("easyloom", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	flags.StringVar(&opts.scan, "scan", "", "list the looms under a directory and exit")
-	flags.IntVar(&opts.port, "port", 0, "http port; 0 picks a free one and reports it")
-	flags.BoolVar(&opts.noOpen, "no-open", false, "do not launch a browser")
-	flags.BoolVar(&opts.dev, "dev", false, "serve the frontend from web/ on disk instead of the embedded copy")
 	flags.BoolVar(&opts.version, "version", false, "print the version and exit")
 	flags.Usage = func() {
-		fmt.Fprintln(stderr, "usage: easyloom [flags] [path]         terminal frontend")
-		fmt.Fprintln(stderr, "       easyloom web [flags] [path]     browser frontend")
+		fmt.Fprintln(stderr, "usage: easyloom [flags] [path]         open a loom in the terminal")
 		fmt.Fprintln(stderr, "       easyloom --scan <directory>     list the looms under a directory")
 		fmt.Fprintln(stderr, "\npath is a repository, a .loom directory, or anything inside one.")
 		fmt.Fprintln(stderr, "With no path, $LOOM_DIR is used, else the search walks up from the")
@@ -301,9 +232,6 @@ func parseFlags(command string, args []string, stderr io.Writer) (options, error
 	}
 	if opts.scan != "" && opts.path != "" {
 		return opts, fmt.Errorf("--scan lists looms and exits; it takes no path as well")
-	}
-	if opts.port < 0 || opts.port > 65535 {
-		return opts, fmt.Errorf("--port %d is not a port", opts.port)
 	}
 	return opts, nil
 }
@@ -351,60 +279,6 @@ func reportDegraded(stdout io.Writer, loom target.Target, v target.Version, err 
 	fmt.Fprintln(stdout, "\nA v1 loom has no map command, so there is no projection to read.")
 	fmt.Fprintf(stdout, "Inspect the migration first: %s migrate-v2 --dry-run\n", loom.Script)
 	return nil
-}
-
-func summarise(w io.Writer, state snapshot.CacheState) {
-	snap := state.Snapshot
-	fmt.Fprintf(w, "snapshot generation %d, %d stitches, %s old\n",
-		state.Generation, len(snap.Stitches), state.Age().Round(time.Millisecond))
-	if state.Stale {
-		fmt.Fprintf(w, "         stale: the last refresh failed: %v\n", state.Err)
-	}
-
-	fmt.Fprintf(w, "frontier %s\n", list(snap.Frontier))
-	fmt.Fprintf(w, "queued   %s\n", list(queued(snap)))
-
-	var errorCount, warningCount int
-	for _, d := range snap.Diagnostics {
-		if d.Severity == snapshot.SeverityError {
-			errorCount++
-			continue
-		}
-		warningCount++
-	}
-	if errorCount+warningCount > 0 {
-		fmt.Fprintf(w, "health   %d error(s), %d warning(s)\n", errorCount, warningCount)
-	}
-}
-
-// queued lists the queue in its own order, which the projection carries as a
-// one-based position per stitch rather than as a list.
-func queued(snap *snapshot.Snapshot) []string {
-	ids := map[int]string{}
-	highest := 0
-	for _, st := range snap.Stitches {
-		if st.QueuePosition == nil {
-			continue
-		}
-		ids[*st.QueuePosition] = st.ID
-		if *st.QueuePosition > highest {
-			highest = *st.QueuePosition
-		}
-	}
-	var out []string
-	for position := 1; position <= highest; position++ {
-		if id, ok := ids[position]; ok {
-			out = append(out, id)
-		}
-	}
-	return out
-}
-
-func list(ids []string) string {
-	if len(ids) == 0 {
-		return "(none)"
-	}
-	return strings.Join(ids, ", ")
 }
 
 func buildVersion() string {

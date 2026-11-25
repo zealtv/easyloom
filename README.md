@@ -41,6 +41,11 @@ happen.
 EasyLoom needs a loom in format v2. Given a v1 loom, it explains that it
 can't drive it and points you at loom's `migrate-v2 --dry-run`.
 
+Inside tmux, EasyLoom marks where its list is, so a tool that shows a small
+live preview of the pane can show the list rather than a corner of the
+screen: it keeps the pane option `@tw-focus` set to `x,y,w,h`, the tabs and
+the list in the pane's cells.
+
 ## Issues and contributions
 
 Issues are welcome. Pull requests aren't accepted for now.

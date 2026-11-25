@@ -4,21 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/zealtv/easyloom/internal/known"
 	"github.com/zealtv/easyloom/internal/target"
 )
 
-// projection is a stub map document with one queued stitch, so the summary has
-// something to report.
+// projection is a stub map document with one queued stitch, so the frame has
+// something to draw.
 const projection = `{
   "schema_version": 1,
   "format_version": 2,
@@ -117,70 +113,14 @@ func exercise(t *testing.T, args []string, getenv func(string) string) (string, 
 	return stdout.String(), stderr.String(), err
 }
 
-// syncBuffer collects output a test reads while the command still writes to it.
-type syncBuffer struct {
-	mu  sync.Mutex
-	buf bytes.Buffer
-}
-
-func (b *syncBuffer) Write(p []byte) (int, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.buf.Write(p)
-}
-
-func (b *syncBuffer) String() string {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.buf.String()
-}
-
-// exerciseWeb runs the browser frontend, which serves until it is interrupted,
-// and interrupts it once it says it is serving. Cancelling the context is what
-// SIGINT does in the real program.
-func exerciseWeb(t *testing.T, args []string) (string, error) {
-	t.Helper()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	var stdout syncBuffer
-	var stderr bytes.Buffer
-	done := make(chan error, 1)
-	go func() { done <- run(ctx, args, &stdout, &stderr, noEnv) }()
-
-	deadline := time.Now().Add(10 * time.Second)
-	for !strings.Contains(stdout.String(), "serving  http://") {
-		select {
-		case err := <-done:
-			return stdout.String(), err
-		default:
-		}
-		if time.Now().After(deadline) {
-			cancel()
-			<-done
-			t.Fatalf("the server never reported a URL:\n%s", stdout.String())
-		}
-		time.Sleep(5 * time.Millisecond)
-	}
-	cancel()
-
-	select {
-	case err := <-done:
-		return stdout.String(), err
-	case <-time.After(10 * time.Second):
-		t.Fatal("the server did not stop when interrupted")
-		return stdout.String(), nil
-	}
-}
-
 func TestRunExplicitPath(t *testing.T) {
 	root, loomDir := stubLoom(t, "2\n", "")
 
-	stdout, err := exerciseWeb(t, []string{"web", "--no-open", root})
+	stdout, _, err := exercise(t, []string{root}, noEnv)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
-	for _, want := range []string{loomDir, "via the command line", "tier     v2", "frontier first", "queued   first"} {
+	for _, want := range []string{loomDir, "via the command line", "tier     v2", "FRONTIER", "first"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output missing %q:\n%s", want, stdout)
 		}
@@ -304,7 +244,9 @@ func TestRunUnsupportedSchemaFails(t *testing.T) {
 }
 
 // A broken loom that still emits a projection is not a crash: map exits
-// non-zero under the same health rules as status.
+// non-zero under the same health rules as status, and run reports no error and
+// draws the projection anyway. (The diagnostics themselves are not asserted:
+// the TUI frame this test reads does not print them.)
 func TestRunUnhealthyLoomStillReports(t *testing.T) {
 	root, loomDir := stubLoom(t, "2\n", "")
 	doc := strings.ReplaceAll(projection, "%ROOT%", loomDir)
@@ -315,12 +257,12 @@ func TestRunUnhealthyLoomStillReports(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stdout, err := exerciseWeb(t, []string{"web", "--no-open", root})
+	stdout, _, err := exercise(t, []string{root}, noEnv)
 	if err != nil {
 		t.Fatalf("run: %v, want the projection used despite a non-zero exit", err)
 	}
-	if !strings.Contains(stdout, "health   1 error(s)") {
-		t.Errorf("diagnostics not reported:\n%s", stdout)
+	if !strings.Contains(stdout, "FRONTIER") {
+		t.Errorf("the TUI did not draw the projection:\n%s", stdout)
 	}
 }
 
@@ -363,19 +305,13 @@ func TestRunRejectsTwoPaths(t *testing.T) {
 	}
 }
 
-func TestRunRejectsBadPort(t *testing.T) {
-	if _, _, err := exercise(t, []string{"--port", "70000"}, noEnv); err == nil {
-		t.Fatal("want an error for a port outside the range")
-	}
-}
-
 // chdir changes directory for the duration of a test.
 func chdir(t *testing.T, dir string) {
 	t.Helper()
 	t.Chdir(dir)
 }
 
-// With no subcommand the terminal frontend runs. Redirected output is not a
+// The terminal UI is what runs. Redirected output is not a
 // terminal, so it gets one plain frame rather than an interactive program with
 // no keyboard.
 func TestRunStartsTheTUIByDefault(t *testing.T) {
@@ -429,105 +365,6 @@ func TestRunV1DoesNotStartTheTUI(t *testing.T) {
 	}
 }
 
-// The web shell binds loopback only, and says which URL it is on — a port the
-// OS chose is unusable until it is printed.
-func TestRunWebServesLoopbackAndReportsTheURL(t *testing.T) {
-	root, _ := stubLoom(t, "2\n", "")
-
-	stdout, err := exerciseWeb(t, []string{"web", "--no-open", root})
-	if err != nil {
-		t.Fatalf("run: %v", err)
-	}
-	url := servedURL(t, stdout)
-	if !strings.HasPrefix(url, "http://127.0.0.1:") {
-		t.Errorf("served %s, want a loopback URL", url)
-	}
-	if strings.Contains(url, ":0/") {
-		t.Errorf("served %s: the real port must be reported, not the flag", url)
-	}
-	if !strings.Contains(stdout, "stopping") {
-		t.Errorf("interrupting the server said nothing:\n%s", stdout)
-	}
-}
-
-// --port picks the port, and the URL reports that one.
-func TestRunWebHonoursAnExplicitPort(t *testing.T) {
-	root, _ := stubLoom(t, "2\n", "")
-	port := freePort(t)
-
-	stdout, err := exerciseWeb(t, []string{"web", "--no-open", "--port", strconv.Itoa(port), root})
-	if err != nil {
-		t.Fatalf("run: %v", err)
-	}
-	if want := "http://127.0.0.1:" + strconv.Itoa(port) + "/"; !strings.HasPrefix(servedURL(t, stdout), want) {
-		t.Errorf("served %s, want a URL on %s", servedURL(t, stdout), want)
-	}
-}
-
-// A port already in use is an error the user can act on, not a panic.
-func TestRunWebReportsAPortInUse(t *testing.T) {
-	root, _ := stubLoom(t, "2\n", "")
-	held, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer held.Close()
-	port := held.Addr().(*net.TCPAddr).Port
-
-	_, _, err = exercise(t, []string{"web", "--no-open", "--port", strconv.Itoa(port), root}, noEnv)
-	if err == nil {
-		t.Fatal("want an error when the port is taken")
-	}
-	if !strings.Contains(err.Error(), strconv.Itoa(port)) {
-		t.Errorf("error does not name the port: %v", err)
-	}
-}
-
-// servedURL extracts the URL from the startup line.
-func servedURL(t *testing.T, stdout string) string {
-	t.Helper()
-	for _, line := range strings.Split(stdout, "\n") {
-		if rest, ok := strings.CutPrefix(strings.TrimSpace(line), "serving"); ok {
-			return strings.TrimSpace(rest)
-		}
-	}
-	t.Fatalf("no serving line in output:\n%s", stdout)
-	return ""
-}
-
-// freePort asks the OS for a port and gives it straight back, which is the
-// closest thing to a port nothing else is on.
-func freePort(t *testing.T) int {
-	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	if err := listener.Close(); err != nil {
-		t.Fatal(err)
-	}
-	return port
-}
-
-// The loom is in the URL from the first page on: what the server announces is
-// a loom's frontier, not a bare host and port.
-func TestRunWebLandsOnTheLoomsFrontier(t *testing.T) {
-	root, _ := stubLoom(t, "2\n", "")
-
-	stdout, err := exerciseWeb(t, []string{"web", "--no-open", root})
-	if err != nil {
-		t.Fatalf("run: %v", err)
-	}
-	slug := filepath.Base(root)
-	if !strings.Contains(stdout, "slug     "+slug) {
-		t.Errorf("output does not name the slug %q:\n%s", slug, stdout)
-	}
-	if want := "/l/" + slug + "/frontier"; !strings.HasSuffix(servedURL(t, stdout), want) {
-		t.Errorf("served %s, want a URL ending %s", servedURL(t, stdout), want)
-	}
-}
-
 func TestRunScanListsLoomsWithTiers(t *testing.T) {
 	// A scan is pointed at a tree and reports the tier of every loom in it.
 	// stubLoom builds one loom per temp dir, so each tier is exercised by
@@ -563,7 +400,7 @@ func TestRunScanReportsAnEmptyTree(t *testing.T) {
 	}
 }
 
-// --scan answers a question and exits; it never opens a frontend, so it does
+// --scan answers a question and exits; it never opens the UI, so it does
 // not also take the path one would be opened from.
 func TestRunScanRejectsAPathAsWell(t *testing.T) {
 	_, _, err := exercise(t, []string{"--scan", t.TempDir(), t.TempDir()}, noEnv)

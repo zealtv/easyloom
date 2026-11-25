@@ -11,10 +11,9 @@ import (
 // The impact pane: what resolving each stitch would release, and what getting
 // there would cost.
 //
-// The arithmetic is all in internal/unblock; this file only draws it — the same
-// split web/impact.js and web/unblock.js are on, and the reason the tree and the
-// frontier could grow an impact badge later without a third implementation of
-// the one thing that must never disagree with itself.
+// The arithmetic is all in internal/unblock; this file only draws it, which is
+// also what lets the tree and the frontier grow an impact badge later without a
+// second implementation of the one thing that must never disagree with itself.
 //
 // Two groups, never merged. "What should I work on now" and "what should I
 // un-park" are different questions and their answers are not comparable: a
@@ -22,9 +21,8 @@ import (
 // releasing one, it is a different decision. One leaderboard over both would
 // invite exactly that comparison.
 //
-// The vocabulary is the browser's, word for word, because the two panes are
-// answering the same question about the same loom and a reader moving between
-// them should not have to translate.
+// The vocabulary is internal/unblock's, word for word, so the pane says what
+// the ranking says.
 
 // Pseudo-IDs for the rows that are not stitches. A stitch ID matches
 // [A-Za-z0-9._-]+, so a space makes these impossible to collide with one —
@@ -330,7 +328,7 @@ func plural(n int, one, many string) string {
 }
 
 // summarised names the first few and counts the rest, the way blocking() and
-// inversion() do. The terminal is narrower than the browser and a row that
+// inversion() do. The terminal is narrow and a row that
 // wraps is a row that breaks the windowing, so a long list is shortened rather
 // than allowed to run off the end unannounced.
 func summarised(ids []string, keep int) string {

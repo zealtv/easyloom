@@ -2,7 +2,7 @@
 //
 // Graph arithmetic and nothing else: a projection in, sets of IDs out. No
 // rendering, no I/O and no package state — the same split `internal/snapshot`
-// and `internal/tui` already keep, and the split `web/unblock.js` is on.
+// and `internal/tui` already keep.
 //
 // # Why re-derive readiness at all
 //
@@ -15,18 +15,20 @@
 // return exactly the set of stitches the loom marked ready, so Disagreements
 // exists to be asserted.
 //
-// # The second implementation
+// # One implementation, held to a golden
 //
-// This is a port of web/unblock.js, and two implementations of one idea are
-// how two frontends start telling the user different things about what to work
-// on next. The rule below is ported from the protocol — .loom/docs/protocol-v2.md,
-// "Decomposition and readiness" — rather than transliterated from the JS, so a
-// bug in that file is not inherited and then agreed with for the wrong reason.
+// The rule below follows the protocol — .loom/docs/protocol-v2.md,
+// "Decomposition and readiness". Until 2026-11-25 a second implementation of
+// it ran in the browser UI's JavaScript, and testdata/rankings.golden.json was
+// generated from that. The JS is retired; the golden stays as the record of the
+// answers it gave, and Go still gives every one of them.
 //
-// What holds the two together is testdata: both run over web/testdata/, both
-// must equal the projection's own Ready flags, and the full rankings are
-// compared against web/testdata/rankings.golden.json. Neither side can move an
-// answer without a test going red.
+// What holds the rule in place is testdata: every fixture in testdata/ must
+// give the projection's own Ready flags, and the full rankings are compared
+// against testdata/rankings.golden.json. A change cannot move an answer
+// without a test going red. When a move is deliberate,
+// `go test ./internal/unblock -update` rewrites the golden from Go and the diff
+// shows which rankings changed.
 //
 // # One step, not transitive
 //
@@ -44,9 +46,8 @@ import (
 )
 
 // Action is what a reader would actually have to do to resolve a stitch. The
-// vocabulary is the JS module's, word for word: two vocabularies for one idea
-// is how the frontends start disagreeing in front of the user rather than in a
-// test.
+// vocabulary is the one the golden file records, and the one the impact pane
+// shows the user.
 type Action string
 
 const (
@@ -102,8 +103,8 @@ type Blocker struct {
 // live-updates, mutation-refresh, queue-reorder-ui" is an answer, and it is
 // what makes the number checkable by looking at the loom.
 //
-// The JSON tags are the JS module's field names, so the golden file is one
-// document both implementations read without a translation layer in the middle.
+// The JSON tags are the field names the golden file uses, so the file decodes
+// into this type directly.
 type Entry struct {
 	ID           string    `json:"id"`
 	Releases     []string  `json:"releases"`
@@ -377,12 +378,10 @@ func impact(snap *snapshot.Snapshot, ctx context, id string, was map[string]bool
 
 	releases := []string{}
 	for other := range now {
-		// The id guard mirrors the JS and is unreachable in both: a stitch with
-		// no open children is resolved by its own hypothesis and so is never
-		// ready under it, and one with open children cannot become ready while
-		// they stay open. It is kept because the two files are read side by
-		// side, and a line that is in one and not the other reads as a
-		// difference in the rule.
+		// The id guard is unreachable: a stitch with no open children is
+		// resolved by its own hypothesis and so is never ready under it, and one
+		// with open children cannot become ready while they stay open. It is
+		// kept to state the rule: a stitch does not release itself.
 		if other != id && !was[other] {
 			releases = append(releases, other)
 		}

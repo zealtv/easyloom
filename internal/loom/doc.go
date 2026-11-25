@@ -6,6 +6,6 @@
 // nothing above it — edits .loom itself: not the queue file, not a directory
 // suffix, not completed-at.
 //
-// Both frontends are thin skins over this package. The TUI keybindings and the
-// future HTTP handlers build no argv of their own.
+// The TUI is a thin skin over this package: its keybindings and palette build
+// no argv of their own.
 package loom

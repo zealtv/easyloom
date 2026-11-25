@@ -23,6 +23,7 @@ import (
 	"github.com/zealtv/easyloom/internal/picker"
 	"github.com/zealtv/easyloom/internal/snapshot"
 	"github.com/zealtv/easyloom/internal/target"
+	"github.com/zealtv/easyloom/internal/twfocus"
 	"github.com/zealtv/easyloom/internal/userconfig"
 	"github.com/zealtv/easyloom/internal/warm"
 )
@@ -85,6 +86,9 @@ func Run(ctx context.Context, opts Options) error {
 	}
 
 	model := New(opts)
+	if opts.Interactive {
+		model.focus.ID = os.Getenv("TMUX_PANE")
+	}
 
 	// Not a terminal: draw one frame in plain text and stop. An interactive
 	// program with no keyboard would just hang holding the pipe open.
@@ -230,6 +234,10 @@ type cursor struct {
 // Model is the program state. Everything it draws about the loom comes from
 // the cache; it keeps no second copy of protocol state.
 type Model struct {
+	// focus tells a pane previewer where the list is (twfocus). Only Run
+	// gives it a pane, so tests and one-frame output report nothing.
+	focus twfocus.Pane
+
 	loom    target.Target
 	version target.Version
 	cache   *snapshot.Cache
@@ -355,8 +363,37 @@ func New(opts Options) Model {
 // seeded with the probe's snapshot.
 func (m Model) Init() tea.Cmd { return tick() }
 
-// Update handles keys, resizes, and the poll.
+// Update handles keys, resizes, and the poll, then tells a pane previewer where the list
+// is now.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	next, cmd := m.update(msg)
+	nm, ok := next.(Model)
+	if !ok {
+		return next, cmd
+	}
+	if f := nm.focus.Report(nm.focusRect()); f != nil {
+		cmd = tea.Batch(cmd, f)
+	}
+	return nm, cmd
+}
+
+// focusRect is the part of the screen a small preview should show: the view's
+// tabs and its list (the queue, on the queue view), under the status bar. With
+// the picker, the palette or no snapshot up, it names nothing.
+func (m Model) focusRect() twfocus.Rect {
+	if m.picker != nil || m.palette != nil || m.state.Snapshot == nil || m.width < 1 {
+		return twfocus.Rect{}
+	}
+	status := m.status()
+	if m.cache == nil {
+		status = m.pickerStatus()
+	}
+	list, _ := share(m.budget(status, m.footer()), m.listSize())
+	// The status bar and its rule, then the list's title (the tabs) and the list.
+	return twfocus.Rect{X: 0, Y: lines(status) + 1, W: m.width, H: 1 + list}
+}
+
+func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		// A terminal that cannot report its size sends zeros. Keep the last

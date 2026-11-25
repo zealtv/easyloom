@@ -1,7 +1,9 @@
 package unblock
 
 import (
+	"bytes"
 	"encoding/json"
+	"flag"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -12,17 +14,44 @@ import (
 	"github.com/zealtv/easyloom/internal/snapshot"
 )
 
-// The fixtures are web/testdata/: real `map --json` output from this repo's own
-// loom — one as it stands, one from earlier, before a slice of work was done — plus one
-// synthetic cyclic loom, because this repo's loom does not have a cycle in it
-// and should not acquire one to be tested against.
-//
-// They are not copied here. One copy means one set of inputs both
-// implementations are held to, and a fixture added for either side is
-// immediately a fixture for both.
-const fixtures = "../../web/testdata"
+// The fixtures are testdata/: real `map --json` output from this repo's own
+// loom — one as it stands, one from earlier, before a slice of work was done —
+// plus hand-written looms for the states a healthy loom does not have, such as
+// a cycle, because this repo's loom should not acquire one to be tested
+// against. See testdata/README.md.
+const fixtures = "testdata"
 
 const goldenFile = "rankings.golden.json"
+
+// update rewrites the golden file from Go's own rankings:
+//
+//	go test ./internal/unblock -update
+//
+// Deliberate and never part of a plain `go test`: a test that quietly rewrites
+// what it asserts asserts nothing. The diff it leaves is the point, since it
+// shows which rankings moved.
+var update = flag.Bool("update", false, "rewrite "+goldenFile+" from the Go rankings")
+
+// writeGolden writes every fixture's ranking as the golden file. The format is
+// the one the retired JS wrote — two-space indent, keys in sorted order, one
+// trailing newline — so a rewrite that changes no ranking changes no byte.
+func writeGolden(t *testing.T) {
+	t.Helper()
+	golden := map[string]Ranking{}
+	for _, name := range fixtureNames(t) {
+		golden[name] = Rank(load(t, name))
+	}
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent("", "  ")
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(golden); err != nil {
+		t.Fatalf("encode golden: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(fixtures, goldenFile), buf.Bytes(), 0o644); err != nil {
+		t.Fatalf("write golden: %v", err)
+	}
+}
 
 func fixtureNames(t *testing.T) []string {
 	t.Helper()
@@ -60,8 +89,7 @@ func load(t *testing.T, name string) *snapshot.Snapshot {
 // The first of the two tests that are the point of this package. The projection
 // is authoritative; this package re-derives its rule only to ask a hypothetical
 // the loom cannot be asked, and a re-derivation that disagrees about the
-// present is wrong about the future. It is the same assertion disagreements()
-// makes in JS.
+// present is wrong about the future.
 func TestReadinessAgreesWithTheProjection(t *testing.T) {
 	for _, name := range fixtureNames(t) {
 		t.Run(name, func(t *testing.T) {
@@ -86,11 +114,17 @@ func TestReadinessAgreesWithTheProjection(t *testing.T) {
 	}
 }
 
-// The second, and the whole risk of this thread: the terminal and the browser
-// must not be able to tell the user different things about what to work on
-// next. The golden file is generated from web/unblock.js by `make golden` and
-// asserted current by its own node test, so a drift on either side lands here.
-func TestRankingsMatchTheJavaScript(t *testing.T) {
+// The second: the ranking tells the user what to work on next, so a change to
+// it must be a decision and never an accident. The golden file holds the
+// rankings as they stood when it was captured from the browser UI's JavaScript
+// (retired 2026-11-25), which is how Go came to give those same answers. A
+// change that moves a ranking fails here and shows which entries moved; if the
+// move is deliberate, `go test ./internal/unblock -update` rewrites the file
+// and the diff is the record.
+func TestRankingsMatchTheGolden(t *testing.T) {
+	if *update {
+		writeGolden(t)
+	}
 	data, err := os.ReadFile(filepath.Join(fixtures, goldenFile))
 	if err != nil {
 		t.Fatalf("read golden: %v", err)
@@ -102,14 +136,14 @@ func TestRankingsMatchTheJavaScript(t *testing.T) {
 
 	names := fixtureNames(t)
 	if len(golden) != len(names) {
-		t.Errorf("golden covers %d fixtures, there are %d — run `make golden`", len(golden), len(names))
+		t.Errorf("golden covers %d fixtures, there are %d — run `go test ./internal/unblock -update`", len(golden), len(names))
 	}
 
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
 			want, ok := golden[name]
 			if !ok {
-				t.Fatalf("%s is not in the golden file — run `make golden`", name)
+				t.Fatalf("%s is not in the golden file — run `go test ./internal/unblock -update`", name)
 			}
 			got := Rank(load(t, name))
 			compare(t, "looseEnds", got.LooseEnds, want.LooseEnds)
@@ -129,7 +163,7 @@ func compare(t *testing.T, group string, got, want []Entry) {
 	}
 	for i := range got {
 		if !reflect.DeepEqual(got[i], want[i]) {
-			t.Errorf("%s[%d]:\n go %+v\n js %+v", group, i, got[i], want[i])
+			t.Errorf("%s[%d]:\n go     %+v\n golden %+v", group, i, got[i], want[i])
 		}
 	}
 }
@@ -142,9 +176,11 @@ func ids(entries []Entry) []string {
 	return out
 }
 
-// Beyond the two agreements, the cases the JS names in prose — so a reader of
-// this package sees the rules stated, and so a fixture regenerated into
-// agreement with a broken port still fails on what the rules say.
+// Beyond the two agreements, the cases below state the rules in prose, so a
+// reader of this package sees them. They are also the only guard against
+// `-update`: a golden regenerated from a broken rule agrees with that rule, so
+// the rules that must hold whatever the golden says are pinned by name here
+// (promote before resume, the cycle guard, the one-step impact of a loose end).
 
 func TestImpactIsOneStepAndNotTransitive(t *testing.T) {
 	snap := load(t, "easyloom-bite7.json")
@@ -178,6 +214,39 @@ func TestALooseEndThatUnblocksNoWorkSaysSo(t *testing.T) {
 	}
 	if got.Action != ActionTie {
 		t.Errorf("action %q, want tie", got.Action)
+	}
+}
+
+// A stitch parked both directly and by inheritance cannot be resumed: `resume`
+// lifts only its own suffix, and the ancestor still holds it. So the answer is
+// promote, and it names the ancestor. Checking WaitingInherited before State is
+// what makes it so; the real looms never have such a stitch, synthetic.json does.
+func TestAStitchParkedTwiceSaysPromoteAndNamesTheAncestor(t *testing.T) {
+	got := Impact(load(t, "synthetic.json"), "twice-parked")
+	if got == nil {
+		t.Fatal("twice-parked is not in synthetic.json")
+	}
+	if got.Action != ActionPromote {
+		t.Errorf("action %q, want promote", got.Action)
+	}
+	if got.ResumeVia == nil || *got.ResumeVia != "parked-goal" {
+		t.Errorf("resumeVia %v, want parked-goal", got.ResumeVia)
+	}
+}
+
+// queue-mutations is the biggest loose end of the earlier real loom: tying it
+// off makes both of the stitches waiting on it ready, and nothing else.
+func TestTheBiggestLooseEndReleasesBothItsDependants(t *testing.T) {
+	got := Impact(load(t, "easyloom-bite7.json"), "queue-mutations")
+	if got == nil {
+		t.Fatal("queue-mutations is not in easyloom-bite7.json")
+	}
+	if got.Action != ActionTie {
+		t.Errorf("action %q, want tie", got.Action)
+	}
+	want := []string{"mutation-refresh", "queue-reorder-ui"}
+	if !reflect.DeepEqual(got.Releases, want) {
+		t.Errorf("releases %v, want %v", got.Releases, want)
 	}
 }
 

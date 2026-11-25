@@ -28,13 +28,11 @@ func impactModel(t *testing.T, snap *snapshot.Snapshot) Model {
 	return m.switchView().switchView().switchView()
 }
 
-// realLoom is this repo's own loom, the fixture the browser's ranking is tested
-// against. Both frontends must say the same thing about the same loom, and this
-// is the only way to assert that from here: the same file, through the Go
-// model, drawn.
+// realLoom is this repo's own loom, the fixture the golden ranking is checked
+// against: the same file, through the Go model, drawn.
 func realLoom(t *testing.T) *snapshot.Snapshot {
 	t.Helper()
-	data, err := os.ReadFile("../../web/testdata/easyloom.json")
+	data, err := os.ReadFile("../unblock/testdata/easyloom.json")
 	if err != nil {
 		t.Fatalf("read fixture: %v", err)
 	}
@@ -271,11 +269,12 @@ func TestAnEmptyGroupSaysWhichKindOfEmpty(t *testing.T) {
 	}
 }
 
-// The whole point of the port: the pane and /l/<slug>/impact say the same thing
-// about the same loom. The golden file is the browser's answer, so drawing the
-// pane from the same fixture and comparing to it is the assertion.
-func TestThePaneAndTheBrowserAgree(t *testing.T) {
-	data, err := os.ReadFile("../../web/testdata/rankings.golden.json")
+// The pane says what the ranking says about the same loom. The golden file
+// holds the ranking (captured from the retired browser UI's JavaScript, and
+// held by internal/unblock's tests), so drawing the pane from the same fixture
+// and comparing to it is the assertion.
+func TestThePaneDrawsTheGoldenRanking(t *testing.T) {
+	data, err := os.ReadFile("../unblock/testdata/rankings.golden.json")
 	if err != nil {
 		t.Fatalf("read golden: %v", err)
 	}
@@ -330,13 +329,13 @@ func assertSameSet(t *testing.T, group string, got, want []string) {
 	}
 	for _, id := range want {
 		if seen[id] == 0 {
-			t.Errorf("%s: the browser ranks %s and the pane does not draw it", group, id)
+			t.Errorf("%s: the golden ranks %s and the pane does not draw it", group, id)
 		}
 		seen[id]--
 	}
 	for id, n := range seen {
 		if n > 0 {
-			t.Errorf("%s: the pane draws %s and the browser does not rank it", group, id)
+			t.Errorf("%s: the pane draws %s and the golden does not rank it", group, id)
 		}
 	}
 }
