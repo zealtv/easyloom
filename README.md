@@ -32,7 +32,7 @@ the working directory.
 - **threads**: the whole tree, with dependencies
 - **impact**: what resolving each stitch would make ready
 
-`↑`/`↓` selects a stitch and `enter` opens it in `$EDITOR`. `:` opens the
+`↑`/`↓` selects a stitch and `enter` opens it in `$EDITOR`. `>` opens the
 command palette, which claims, ties off, parks, tends, drops and queues
 stitches by running the loom's own script. It also reorders the queue, undoes
 the last queue move, and quits. EasyLoom follows changes on disk as they

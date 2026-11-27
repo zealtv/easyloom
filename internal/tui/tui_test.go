@@ -57,7 +57,7 @@ func TestStatusBarReportsTheLoom(t *testing.T) {
 	m, _ := seeded(t, neverRuns(t))
 
 	view := m.View()
-	for _, want := range []string{"demo", "v2", "3 stitches", ": commands"} {
+	for _, want := range []string{"demo", "v2", "3 stitches", "> commands"} {
 		if !strings.Contains(view, want) {
 			t.Errorf("status bar missing %q:\n%s", want, view)
 		}
@@ -156,7 +156,7 @@ func TestFooterGroupsHintsAndKeepsEveryKey(t *testing.T) {
 		m.width = width
 		footer := m.footer()
 		for _, want := range []string{
-			"↑/↓ select", "⇧↑/↓ scroll", "tab queue", "enter edit", ": commands",
+			"↑/↓ select", "⇧↑/↓ scroll", "tab queue", "enter edit", "> commands",
 		} {
 			if !strings.Contains(footer, want) {
 				t.Errorf("width %d omitted %q:\n%s", width, want, footer)
@@ -198,7 +198,7 @@ func TestWrappedFooterReducesBodyBudget(t *testing.T) {
 	if got := lines(view); got > m.height {
 		t.Fatalf("wrapped footer made a %d-line frame for height %d:\n%s", got, m.height, view)
 	}
-	for _, want := range []string{"↑/↓ select", ": commands"} {
+	for _, want := range []string{"↑/↓ select", "> commands"} {
 		if !strings.Contains(view, want) {
 			t.Errorf("wrapped frame omitted %q:\n%s", want, view)
 		}

@@ -321,7 +321,7 @@ func TestRunStartsTheTUIByDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
-	for _, want := range []string{"FRONTIER", "1 stitches", ": commands"} {
+	for _, want := range []string{"FRONTIER", "1 stitches", "> commands"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("frame missing %q:\n%s", want, stdout)
 		}

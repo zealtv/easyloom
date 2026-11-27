@@ -747,8 +747,10 @@ func (m Model) finish(msg mutationMsg) (Model, tea.Cmd) {
 	if msg.err != nil {
 		m.over = m.undo
 		m.failure = refusal(msg)
+		m.refused = m.failure
 		m = m.reselect()
 	} else {
+		m.refused = ""
 		// Said now rather than on the keystroke: what is announced is what the
 		// loom did, not what we asked it for.
 		m.notice = msg.announce

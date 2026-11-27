@@ -24,6 +24,8 @@ import (
 	"github.com/zealtv/easyloom/internal/snapshot"
 	"github.com/zealtv/easyloom/internal/target"
 	"github.com/zealtv/easyloom/internal/twfocus"
+	"github.com/zealtv/easyloom/internal/twglance"
+	"github.com/zealtv/easyloom/internal/twpane"
 	"github.com/zealtv/easyloom/internal/userconfig"
 	"github.com/zealtv/easyloom/internal/warm"
 )
@@ -88,6 +90,10 @@ func Run(ctx context.Context, opts Options) error {
 	model := New(opts)
 	if opts.Interactive {
 		model.focus.ID = os.Getenv("TMUX_PANE")
+		if os.Getenv("TMUX") != "" {
+			model.pane = twpane.New(os.Getenv("TMUX_PANE"))
+			model.glancePane = twglance.New(os.Getenv("TMUX_PANE"))
+		}
 	}
 
 	// Not a terminal: draw one frame in plain text and stop. An interactive
@@ -118,6 +124,12 @@ func Run(ctx context.Context, opts Options) error {
 	}()
 
 	_, err := program.Run()
+	// The map must not go on showing a ready line or a status for a program
+	// that has gone.
+	// Every copy of the model shares this pane's state, so this also stops
+	// any write still in flight.
+	_ = model.pane.Clear()
+	_ = model.glancePane.Clear()
 	// Quit cancels the map run in flight rather than leaving a subprocess
 	// behind holding the loom. There is no cache to close when the program
 	// started cold and the user quit out of the picker without opening
@@ -237,6 +249,16 @@ type Model struct {
 	// focus tells a pane previewer where the list is (twfocus). Only Run
 	// gives it a pane, so tests and one-frame output report nothing.
 	focus twfocus.Pane
+	// pane tells tireless-watcher's map what is ready and what EasyLoom is
+	// doing (twpane, panestatus.go). Like focus, only Run gives it a pane.
+	pane twpane.Pane
+	// glancePane carries the badge line and the queue list (glance.go).
+	glancePane twglance.Pane
+	// act is what EasyLoom is doing to the loom, as @tw_status says it.
+	act activity
+	// refused is the failure a refused mutation showed, so the pane can say
+	// "fail" for as long as that, and not some other failure, is on screen.
+	refused string
 
 	loom    target.Target
 	version target.Version
@@ -364,7 +386,7 @@ func New(opts Options) Model {
 func (m Model) Init() tea.Cmd { return tick() }
 
 // Update handles keys, resizes, and the poll, then tells a pane previewer where the list
-// is now.
+// is now, and the map what is ready and what EasyLoom is doing.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	next, cmd := m.update(msg)
 	nm, ok := next.(Model)
@@ -373,6 +395,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	if f := nm.focus.Report(nm.focusRect()); f != nil {
 		cmd = tea.Batch(cmd, f)
+	}
+	nm.updateActivity(time.Now())
+	if p := nm.pane.Sync(nm.paneValues()); p != nil {
+		cmd = tea.Batch(cmd, p)
+	}
+	if nm.glancePane.ID != "" {
+		if g := nm.glancePane.Sync(nm.glance()); g != nil {
+			cmd = tea.Batch(cmd, g)
+		}
 	}
 	return nm, cmd
 }

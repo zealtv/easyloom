@@ -17,7 +17,7 @@ import (
 // TUI in one tmux pane receives whatever is typed while it has focus, and a
 // sentence meant for the pane beside it used to claim, tie and queue things.
 // So those take three deliberate steps — open, find, run — and the palette
-// selects nothing until the reader has typed or moved, which makes ":" then
+// selects nothing until the reader has typed or moved, which makes ">" then
 // enter do nothing at all. What stays on a bare key only moves around: the
 // selection, the scroll, the view and the folds. Refreshing, switching looms
 // and quitting are here too — a stray q closing the program is as much a
@@ -28,7 +28,7 @@ import (
 // them, so the palette is also the answer to "what can I do here".
 
 // paletteKey opens the palette.
-const paletteKey = ":"
+const paletteKey = ">"
 
 // paletteRows is how many commands the palette shows at once. It does not
 // shrink as the list filters, so the box stays still under the typing.

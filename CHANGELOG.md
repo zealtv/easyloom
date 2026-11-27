@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.3.0 (2026-11-27)
+
+EasyLoom now tells a tmux session map about itself, from its own pane.
+
+- The command palette opens on `>` instead of `:`. `:` no longer opens it.
+- Inside tmux, EasyLoom keeps a few options on its own pane for a map of the
+  session to read: `@tw-next` names the stitch the queue would hand over
+  next and how many more are queued, and `@tw_status` with
+  `@tw_status_text` says what EasyLoom is doing while it claims, ties, parks
+  or queues a stitch (`fail`, with the loom's words, if the loom refused).
+- It also publishes the queue as a glance for the map: a badge line that
+  counts the queue by state, most pressing first (a record the loom cannot
+  resolve leads, as `!`), and the queue itself in the loom's order, one row
+  per stitch with the glyph the queue pane draws. An id too long for its
+  row keeps its head and tail, with an ellipsis in the middle.
+- All of these options are cleared when EasyLoom exits, and nothing is
+  written outside tmux.
+
 ## v0.2.0 (2026-11-25)
 
 EasyLoom is now the terminal UI alone.
