@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.3.1 (2026-11-28)
+
+- The ready line for tireless-watcher's map moves from `@tw-next` to
+  `@tw-idle`, written as `next: fix-flake +2 queued`. `@tw-next` is no longer
+  set.
+- The README says EasyLoom has a glance for
+  [Tireless Watcher](https://github.com/zealtv/tireless-watcher), and no
+  longer carries the glance's detail.
+
 ## v0.3.0 (2026-11-27)
 
 EasyLoom now tells a tmux session map about itself, from its own pane.

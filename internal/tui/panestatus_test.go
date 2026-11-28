@@ -92,7 +92,7 @@ func setState(snap *snapshot.Snapshot, id string, state snapshot.State, ready bo
 }
 
 // paneRecorder gives m a pane whose tmux calls are recorded, one string per
-// option set ("@tw-next=x") or unset ("@tw-next=").
+// option set ("@tw-idle=x") or unset ("@tw-idle=").
 func paneRecorder(m *Model) func() map[string]string {
 	now := map[string]string{}
 	m.pane = twpane.Pane{ID: "%9", Run: func(args ...string) error {
@@ -135,13 +135,13 @@ func update(m Model, msg tea.Msg) Model {
 }
 
 // While EasyLoom runs a mutation its pane says "work" with what it is doing;
-// once the loom has done it, the status goes and @tw-next stays.
+// once the loom has done it, the status goes and @tw-idle stays.
 func TestPaneSaysWorkWhileActing(t *testing.T) {
 	m, _ := mutableModel(t, okJSON("claim"))
 	opts := paneRecorder(&m)
 	m = update(m, tea.WindowSizeMsg{Width: 100, Height: 40})
-	if got := opts()["@tw-next"]; got != "http-server +1 queued" {
-		t.Fatalf("@tw-next = %q", got)
+	if got := opts()["@tw-idle"]; got != "next: http-server +1 queued" {
+		t.Fatalf("@tw-idle = %q", got)
 	}
 
 	m = press(t, m, paletteKey)

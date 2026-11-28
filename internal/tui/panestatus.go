@@ -15,7 +15,10 @@ import (
 
 // paneValues is what the pane's options should say now.
 func (m Model) paneValues() twpane.Values {
-	v := twpane.Values{twpane.Next: m.nextLine()}
+	v := twpane.Values{}
+	if next := m.nextLine(); next != "" {
+		v[twpane.Idle] = "next: " + next // the map draws @tw-idle as written
+	}
 	if m.act.state != "" {
 		v[twpane.Status] = m.act.state
 		v[twpane.StatusText] = m.act.text
@@ -26,7 +29,7 @@ func (m Model) paneValues() twpane.Values {
 
 // nextLine is the map's ready line, the stitch `loom next` would take from
 // the queue and how many more queued stitches are still to do:
-// "fix-flake +2 queued". The map adds "next: " itself. It is empty, which
+// "fix-flake +2 queued". paneValues puts "next: " in front. It is empty, which
 // unsets the option, when no loom is open or nothing queued is ready.
 func (m Model) nextLine() string {
 	if m.cache == nil || m.state.Snapshot == nil {

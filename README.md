@@ -38,13 +38,10 @@ stitches by running the loom's own script. It also reorders the queue, undoes
 the last queue move, and quits. EasyLoom follows changes on disk as they
 happen.
 
+EasyLoom has a glance for [Tireless Watcher](https://github.com/zealtv/tireless-watcher).
+
 EasyLoom needs a loom in format v2. Given a v1 loom, it explains that it
 can't drive it and points you at loom's `migrate-v2 --dry-run`.
-
-Inside tmux, EasyLoom marks where its list is, so a tool that shows a small
-live preview of the pane can show the list rather than a corner of the
-screen: it keeps the pane option `@tw-focus` set to `x,y,w,h`, the tabs and
-the list in the pane's cells.
 
 ## Issues and contributions
 
